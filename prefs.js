@@ -15,7 +15,7 @@ export default class ButiaPreferences extends ExtensionPreferences {
         // Cria o grupo de configurações
         const group = new Adw.PreferencesGroup({
             title: 'Configurações Visuais e Comportamentais',
-            description: 'Ajuste o comportamento do dock Butiá Engine.'
+            description: 'Ajuste o comportamento do dock Butiá.'
         });
         page.add(group);
 

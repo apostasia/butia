@@ -1,4 +1,4 @@
-# Plano de Implementação TDD: Butiá Engine (GNOME 49/50)
+# Plano de Implementação TDD: Butiá (GNOME 49/50)
 
 ## Fase 1: Setup da Infraestrutura TDD (Jasmine + Mocks Customizados)
 1. **Ambiente de Teste:** Criar estrutura de diretórios (`tests/`, `tests/mocks/`).

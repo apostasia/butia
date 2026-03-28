@@ -1,6 +1,6 @@
 {
     "uuid": "butia@apostasia.github.com",
-    "name": "Butiá Engine",
+    "name": "Butiá",
     "description": "Premium 120Hz-ready rendering engine extension",
     "shell-version": [ "49", "50" ],
     "url": "https://github.com/apostasia/butia"

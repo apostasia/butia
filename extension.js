@@ -4,7 +4,7 @@ import Dock from './dock.js';
 import AnimationManager from './animationManager.js';
 import TrashManager from './trash.js';
 
-export default class ButiaEngine extends Extension {
+export default class Butia extends Extension {
     constructor(metadata) {
         super(metadata);
         this._dock = null;
@@ -14,7 +14,7 @@ export default class ButiaEngine extends Extension {
     }
 
     enable() {
-        console.debug(`[Butiá] Inicializando Engine (Wayland/ESM)...`);
+        console.debug(`[Butiá] Inicializando (Wayland/ESM)...`);
 
         if (Main.layoutManager._startingUp) {
             this._startupId = Main.layoutManager.connect('startup-complete', () => {
@@ -59,7 +59,7 @@ export default class ButiaEngine extends Extension {
     }
 
     disable() {
-        console.debug(`[Butiá] Desativando Engine e executando limpeza profunda...`);
+        console.debug(`[Butiá] Desativando e executando limpeza profunda...`);
 
         if (this._startupId) {
             Main.layoutManager.disconnect(this._startupId);
