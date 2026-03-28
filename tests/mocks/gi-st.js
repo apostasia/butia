@@ -1,4 +1,3 @@
-// tests/mocks/gi-st.js
 import Clutter from './gi-clutter.js';
 
 export default {
@@ -17,6 +16,7 @@ export default {
     Widget: class Widget extends Clutter.Actor {
         constructor(params = {}) {
             super();
+            this.name = params.name;
             this.style = params.style || '';
             this.width = params.width || 0;
             this.height = params.height || 0;

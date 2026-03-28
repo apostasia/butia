@@ -2,12 +2,14 @@ import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import Dock from './dock.js';
 import AnimationManager from './animationManager.js';
+import TrashManager from './trash.js';
 
 export default class ButiaEngine extends Extension {
     constructor(metadata) {
         super(metadata);
         this._dock = null;
         this._animationManager = null;
+        this._trashManager = null;
         this._startupId = 0;
     }
 
@@ -28,10 +30,14 @@ export default class ButiaEngine extends Extension {
 
         this._animationManager = new AnimationManager();
         this._dock = new Dock();
+        this._trashManager = new TrashManager();
         
         // Popula os mockups (Phase 2)
         this._dock.populate();
         
+        // Adiciona a lixeira ao final
+        this._dock.container.add_child(this._trashManager.getActor());
+
         // Aplica animações (Phase 3)
         let children = this._dock.container.get_children();
         for(let i=0; i<children.length; i++) {
@@ -58,6 +64,11 @@ export default class ButiaEngine extends Extension {
         if (this._startupId) {
             Main.layoutManager.disconnect(this._startupId);
             this._startupId = 0;
+        }
+
+        if (this._trashManager) {
+            this._trashManager.destroy();
+            this._trashManager = null;
         }
 
         if (this._dock) {
