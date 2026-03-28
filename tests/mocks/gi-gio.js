@@ -2,7 +2,8 @@ class Settings {
     constructor(params) {
         this.schema_id = params.schema_id;
         this._store = {
-            'folder-children': ['Utilities', 'Games']
+            'folder-children': ['Utilities', 'Games'],
+            'favorite-apps': ['firefox.desktop', 'org.gnome.Terminal.desktop']
         };
     }
     get_strv(key) {
@@ -11,6 +12,8 @@ class Settings {
     set_strv(key, val) {
         this._store[key] = val;
     }
+    connect() {}
+    disconnect() {}
 }
 
 export const File = {

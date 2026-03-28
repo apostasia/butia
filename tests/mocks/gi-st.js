@@ -24,6 +24,19 @@ export default {
         }
         set_style_class_name(name) { this._style_class = name; }
     },
+    Button: class Button extends Clutter.Actor {
+        constructor(params = {}) {
+            super();
+            this.reactive = params.reactive;
+            this._style_class = params.style_class || '';
+            this._child = null;
+            this._signals = {};
+        }
+        set_style_class_name(name) { this._style_class = name; }
+        set_child(child) { this._child = child; this.add_child(child); }
+        connect(sig, cb) { this._signals[sig] = cb; return 1; }
+        emit(sig) { if (this._signals[sig]) this._signals[sig](); }
+    },
     ScrollView: class ScrollView extends Clutter.Actor {
         constructor() { super(); }
         add_actor(actor) { this.add_child(actor); }

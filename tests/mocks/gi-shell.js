@@ -11,13 +11,30 @@ export default {
             this.mode = params.mode;
         }
     },
+    AppState: {
+        STOPPED: 0,
+        STARTING: 1,
+        RUNNING: 2
+    },
     AppSystem: {
         get_default: () => ({
-            get_running: () => [],
-            lookup_app: (id) => ({
-                get_name: () => id,
-                get_state: () => 0
-            })
+            _running: [],
+            _signals: {},
+            connect: function(sig, cb) {
+                this._signals[sig] = cb;
+                return 1;
+            },
+            disconnect: () => {},
+            get_running: function() { return this._running; },
+            lookup_app: function(id) {
+                return {
+                    get_id: () => id,
+                    get_name: () => id,
+                    get_state: () => 0,
+                    create_icon_texture: (size) => ({ width: size, height: size }),
+                    activate: () => {}
+                };
+            }
         })
     }
 };
