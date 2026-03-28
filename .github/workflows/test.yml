@@ -1,0 +1,34 @@
+name: TDD CI Pipeline
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install GNOME testing dependencies (GJS)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gjs gobject-introspection libglib2.0-dev zip gnome-shell
+    
+    - name: Compile GSettings Schemas
+      run: make compile-schemas
+      
+    - name: Run Unit Tests (TDD Specs)
+      run: make test
+
+    - name: Package Extension
+      run: make pack
+
+    - name: Archive Extension Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: butia-extension
+        path: "*.zip"
