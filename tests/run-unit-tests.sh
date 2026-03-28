@@ -120,11 +120,12 @@ function createTempTestFile(sourcePath) {
     text = text.replace("import { File, FileMonitorEvent } from 'gi://Gio';", "import { File, FileMonitorEvent } from 'file://" + ABS_TEST_DIR + "/mocks/gi-gio.js';");
     text = text.replace("import Gio from 'gi://Gio';", "import Gio from 'file://" + ABS_TEST_DIR + "/mocks/gi-gio.js';");
     
-    // For nested internal file imports in extension.js
+    // For nested internal file imports in extension.js and dock.js
     text = text.replace(/from '\.\/(.*)\.js';/g, "from 'file://" + EXTENSION_DIR + "/$1.js.test.tmp.js';");
 
     text = text.replace(/import \*\s+as\s+(.*) from 'resource:\/\/\/org\/gnome\/shell\/ui\/main\.js';/g, "import * as $1 from 'file://" + ABS_TEST_DIR + "/mocks/gnome-shell-ui-main.js';");
     text = text.replace(/import\s*\{\s*(.*?)\s*\}\s*from\s*'resource:\/\/\/org\/gnome\/shell\/extensions\/extension\.js';/g, "import { $1 } from 'file://" + ABS_TEST_DIR + "/mocks/gnome-shell-extensions.js';");
+    text = text.replace(/import \*\s+as\s+(.*) from 'resource:\/\/\/org\/gnome\/shell\/ui\/dnd\.js';/g, "import * as $1 from 'file://" + ABS_TEST_DIR + "/mocks/gnome-shell-ui-dnd.js';");
 
     let tempName = sourcePath + '.test.tmp.js';
     let tempFile = Gio.File.new_for_path(tempName);
@@ -151,8 +152,9 @@ globalThis.loadModuleForTest = async function(moduleName) {
         throw new Error(`File not found: ${sourcePath}`);
     }
 
-    // Since extension.js relies on other files, we must create temp files for all of them first
-    if (moduleName === 'extension.js') {
+    // Since files rely on other files, we must create temp files for all of them first
+    if (moduleName === 'extension.js' || moduleName === 'dock.js') {
+        createTempTestFile(EXTENSION_DIR + '/folderManager.js');
         createTempTestFile(EXTENSION_DIR + '/dock.js');
         createTempTestFile(EXTENSION_DIR + '/animationManager.js');
         createTempTestFile(EXTENSION_DIR + '/trash.js');
@@ -160,6 +162,7 @@ globalThis.loadModuleForTest = async function(moduleName) {
 
     let tempPath = createTempTestFile(sourcePath);
     let module = await import('file://' + tempPath);
+    Gio.File.new_for_path(tempPath).delete(null);
     return module;
 }
 
