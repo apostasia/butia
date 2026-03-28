@@ -1,6 +1,6 @@
-# Butiá - Advanced GNOME Shell Dock Engine
+# Butiá - Advanced GNOME Shell Dock
 
-**Butiá** (`butia@apostasia.github.com`) is a high-performance, Wayland-only dock middleware designed specifically for modern GNOME Shell environments (versions 49, 50, and above).
+**Butiá** (`butia@apostasia.github.com`) is a high-performance, Wayland-only dock  designed specifically for modern GNOME Shell environments (versions 49, 50, and above).
 
 Built entirely on ECMAScript Modules (ESM), it intercepts the GNOME compositor's paint cycle to inject hardware-accelerated visual transformations and organic physics. The result is a premium, lag-free user experience that seamlessly integrates with the Linux desktop.
 
