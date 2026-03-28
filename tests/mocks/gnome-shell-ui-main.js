@@ -17,3 +17,14 @@ export const layoutManager = {
 export const panel = {
     statusArea: {}
 };
+
+export const overview = {
+    dash: {
+        show: () => { overview.dash._visible = true; },
+        hide: () => { overview.dash._visible = false; }
+    }
+};
+
+export const sessionMode = {
+    hasDash: true
+};

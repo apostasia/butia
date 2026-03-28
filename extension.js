@@ -28,6 +28,11 @@ export default class Butia extends Extension {
     _initializeUI() {
         if (this._dock) return;
 
+        // Hide default Dash
+        if (Main.sessionMode.hasDash && Main.overview.dash) {
+            Main.overview.dash.hide();
+        }
+
         this._animationManager = new AnimationManager();
         this._dock = new Dock();
         this._trashManager = new TrashManager();
@@ -76,6 +81,11 @@ export default class Butia extends Extension {
             this._dock.container.destroy();
             this._dock = null;
             this._animationManager = null;
+        }
+
+        // Restore default Dash
+        if (Main.sessionMode.hasDash && Main.overview.dash) {
+            Main.overview.dash.show();
         }
     }
 }

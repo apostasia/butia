@@ -14,7 +14,6 @@ globalThis.ABS_TEST_DIR = ABS_TEST_DIR; // EXPOSE THIS SO WE CAN MOCK DYNAMICALL
 let testsPassed = 0;
 let testsFailed = 0;
 
-let currentBeforeAlls = [];
 let describeBlocks = [];
 
 globalThis.describe = function(name, fn) {
@@ -37,7 +36,6 @@ globalThis.describe = function(name, fn) {
     globalThis.beforeAll = oldBeforeAll;
     globalThis.it = oldIt;
 };
-
 
 globalThis.expect = function(actual) {
     return {
@@ -64,6 +62,11 @@ globalThis.expect = function(actual) {
         toBeTruthy: function() {
             if (!actual) {
                 throw new Error(`Expected truthy value but got ${actual}`);
+            }
+        },
+        toBeFalsy: function() {
+            if (actual) {
+                throw new Error(`Expected falsy value but got ${actual}`);
             }
         },
         toHaveBeenCalled: function() {
@@ -112,8 +115,16 @@ function createTempTestFile(sourcePath) {
     text = text.replace(/import (.*) from 'gi:\/\/St';/g, "import $1 from 'file://" + ABS_TEST_DIR + "/mocks/gi-st.js';");
     text = text.replace(/import (.*) from 'gi:\/\/Shell';/g, "import $1 from 'file://" + ABS_TEST_DIR + "/mocks/gi-shell.js';");
     text = text.replace(/import (.*) from 'gi:\/\/Meta';/g, "import $1 from 'file://" + ABS_TEST_DIR + "/mocks/gi-meta.js';");
-    text = text.replace(/import (.*) from 'gi:\/\/Gio';/g, "import $1 from 'file://" + ABS_TEST_DIR + "/mocks/gi-gio.js';");
+    
+    // Simplest possible replacement for gio
+    text = text.replace("import { File, FileMonitorEvent } from 'gi://Gio';", "import { File, FileMonitorEvent } from 'file://" + ABS_TEST_DIR + "/mocks/gi-gio.js';");
+    text = text.replace("import Gio from 'gi://Gio';", "import Gio from 'file://" + ABS_TEST_DIR + "/mocks/gi-gio.js';");
+    
+    // For nested internal file imports in extension.js
+    text = text.replace(/from '\.\/(.*)\.js';/g, "from 'file://" + EXTENSION_DIR + "/$1.js.test.tmp.js';");
+
     text = text.replace(/import \*\s+as\s+(.*) from 'resource:\/\/\/org\/gnome\/shell\/ui\/main\.js';/g, "import * as $1 from 'file://" + ABS_TEST_DIR + "/mocks/gnome-shell-ui-main.js';");
+    text = text.replace(/import\s*\{\s*(.*?)\s*\}\s*from\s*'resource:\/\/\/org\/gnome\/shell\/extensions\/extension\.js';/g, "import { $1 } from 'file://" + ABS_TEST_DIR + "/mocks/gnome-shell-extensions.js';");
 
     let tempName = sourcePath + '.test.tmp.js';
     let tempFile = Gio.File.new_for_path(tempName);
@@ -140,9 +151,15 @@ globalThis.loadModuleForTest = async function(moduleName) {
         throw new Error(`File not found: ${sourcePath}`);
     }
 
+    // Since extension.js relies on other files, we must create temp files for all of them first
+    if (moduleName === 'extension.js') {
+        createTempTestFile(EXTENSION_DIR + '/dock.js');
+        createTempTestFile(EXTENSION_DIR + '/animationManager.js');
+        createTempTestFile(EXTENSION_DIR + '/trash.js');
+    }
+
     let tempPath = createTempTestFile(sourcePath);
     let module = await import('file://' + tempPath);
-    Gio.File.new_for_path(tempPath).delete(null);
     return module;
 }
 
@@ -186,6 +203,16 @@ async function runTests() {
             }
         }
     }
+
+    // Cleanup temp files
+    try {
+        Gio.File.new_for_path(EXTENSION_DIR + '/dock.js.test.tmp.js').delete(null);
+        Gio.File.new_for_path(EXTENSION_DIR + '/animationManager.js.test.tmp.js').delete(null);
+        Gio.File.new_for_path(EXTENSION_DIR + '/trash.js.test.tmp.js').delete(null);
+        Gio.File.new_for_path(EXTENSION_DIR + '/folderManager.js.test.tmp.js').delete(null);
+        Gio.File.new_for_path(EXTENSION_DIR + '/intellihide.js.test.tmp.js').delete(null);
+        Gio.File.new_for_path(EXTENSION_DIR + '/extension.js.test.tmp.js').delete(null);
+    } catch(e) {}
 
     print(`\n\x1b[1mTest Summary: ${testsPassed} passed, ${testsFailed} failed\x1b[0m`);
     System.exit(testsFailed > 0 ? 1 : 0);
