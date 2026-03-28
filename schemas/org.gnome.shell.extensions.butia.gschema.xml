@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.butia" path="/org/gnome/shell/extensions/butia/">
+    <key name="launch-animation" type="s">
+      <choices>
+        <choice value="zoom"/>
+        <choice value="glow"/>
+      </choices>
+      <default>'zoom'</default>
+      <summary>Launch Animation</summary>
+      <description>Animation to play when launching an application (zoom or glow).</description>
+    </key>
+    <key name="multi-monitor" type="s">
+      <choices>
+        <choice value="primary"/>
+        <choice value="all"/>
+      </choices>
+      <default>'primary'</default>
+      <summary>Multi-monitor Behavior</summary>
+      <description>Show dock only on primary monitor or all monitors.</description>
+    </key>
+  </schema>
+</schemalist>

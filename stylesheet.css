@@ -1,0 +1,30 @@
+/* Butiá Dock Styles */
+.butia-dock-container {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 8px;
+    spacing: 8px;
+}
+
+.butia-dock-item {
+    border-radius: 12px;
+    transition-property: transform; /* Modern GNOME Clutter uses standard CSS for some transitions */
+    transition-duration: 250ms;
+    transition-timing-function: ease-out;
+}
+
+.butia-dock-item-hovered {
+    /* Shadow can be added via box-shadow in modern St or via Clutter Effect */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.butia-jiggle {
+    /* Using CSS for wobble in modern St environments */
+    animation: jiggle 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes jiggle {
+    0% { transform: rotate(-2deg); }
+    100% { transform: rotate(2deg); }
+}

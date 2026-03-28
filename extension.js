@@ -1,90 +1,70 @@
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import Clutter from 'gi://Clutter';
-import Meta from 'gi://Meta';
-import St from 'gi://St';
+import Dock from './dock.js';
+import AnimationManager from './animationManager.js';
 
 export default class ButiaEngine extends Extension {
     constructor(metadata) {
         super(metadata);
-        // Pré-alocação de variáveis para evitar vazamentos e acionamentos do Garbage Collector
-        this._stageEventId = null;
-        this._laterId = 0;
-        this._dockContainer = null;
-        
-        // Coordenadas em cache para o cálculo Gaussiano
-        this._mouseX = 0;
-        this._mouseY = 0;
+        this._dock = null;
+        this._animationManager = null;
+        this._startupId = 0;
     }
 
     enable() {
         console.debug(`[Butiá] Inicializando Engine (Wayland/ESM)...`);
 
-        // 1. Criação do container principal (Dock)
-        this._dockContainer = new St.BoxLayout({
-            name: 'ButiaDockContainer',
-            reactive: true,
-            track_hover: true,
-            style_class: 'butia-dock-container'
-        });
+        if (Main.layoutManager._startingUp) {
+            this._startupId = Main.layoutManager.connect('startup-complete', () => {
+                this._initializeUI();
+            });
+        } else {
+            this._initializeUI();
+        }
+    }
 
-        // Adiciona ao layout gerenciado pelo Mutter
-        Main.layoutManager.addTopChrome(this._dockContainer);
+    _initializeUI() {
+        if (this._dock) return;
 
-        // 2. Interceptação de Eventos (Event Bubbling no Nível 0)
-        // Captura o movimento do mouse globalmente para garantir precisão máxima
-        this._stageEventId = global.stage.connect('captured-event', (actor, event) => {
-            if (event.type() === Clutter.EventType.MOTION) {
-                let [x, y] = event.get_coords();
-                this._mouseX = x;
-                this._mouseY = y;
-            }
-            // Retorna PROPAGATE para não bloquear o evento de chegar a outras janelas
-            return Clutter.EVENT_PROPAGATE; 
-        });
+        this._animationManager = new AnimationManager();
+        this._dock = new Dock();
+        
+        // Popula os mockups (Phase 2)
+        this._dock.populate();
+        
+        // Aplica animações (Phase 3)
+        let children = this._dock.container.get_children();
+        for(let i=0; i<children.length; i++) {
+            this._animationManager.setupHoverAnimation(children[i]);
+        }
 
-        // 3. Hook de Frame (BEFORE_REDRAW)
-        // Garante que a física e interpolação ocorram milissegundos antes do render da GPU
-        let laters = global.display.get_laters();
-        this._laterId = laters.add(Meta.LaterType.BEFORE_REDRAW, () => {
-            this._renderTick();
-            return true;
-        });
+        // Adiciona na tela
+        Main.layoutManager.addChrome(this._dock.container);
 
+        let monitor = Main.layoutManager.primaryMonitor;
+        if (monitor) {
+            let natWidth = this._dock.container.get_preferred_width(-1)[1];
+            let natHeight = this._dock.container.get_preferred_height(-1)[1];
+            this._dock.container.set_position(
+                monitor.x + Math.floor((monitor.width - natWidth) / 2),
+                monitor.y + monitor.height - natHeight - 24
+            );
+        }
     }
 
     disable() {
         console.debug(`[Butiá] Desativando Engine e executando limpeza profunda...`);
 
-        // 1. Remoção do Hook de Frame
-        if (this._laterId !== 0) {
-            global.display.get_laters().remove(this._laterId);
-            this._laterId = 0;
+        if (this._startupId) {
+            Main.layoutManager.disconnect(this._startupId);
+            this._startupId = 0;
         }
 
-
-        // 2. Desconexão de Sinais Globais
-        if (this._stageEventId) {
-            global.stage.disconnect(this._stageEventId);
-            this._stageEventId = null;
+        if (this._dock) {
+            Main.layoutManager.removeChrome(this._dock.container);
+            this._dock.container.destroy();
+            this._dock = null;
+            this._animationManager = null;
         }
-
-        // 3. Destruição rigorosa dos atores visuais
-        if (this._dockContainer) {
-            if (Main.layoutManager.removeChrome) {
-                Main.layoutManager.removeChrome(this._dockContainer);
-            } else {
-                // Compatibilidade dependendo da versão exata do Shell
-                this._dockContainer.get_parent()?.remove_child(this._dockContainer);
-            }
-            this._dockContainer.destroy();
-            this._dockContainer = null;
-        }
-    }
-
-    _renderTick() {
-        // Loop de física atrelado à taxa de atualização do monitor (ex: 120Hz/144Hz).
-        // Aqui aplicaremos o LERP (0.20) e a Magnificação Gaussiana (Sigma 115).
-        // Como o container ainda está vazio, deixamos a função inativa por enquanto.
     }
 }
