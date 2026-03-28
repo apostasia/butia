@@ -15,7 +15,7 @@ install: compile-schemas
 	cp -r * ~/.local/share/gnome-shell/extensions/$(EXTENSION_UUID)/
 
 pack: compile-schemas
-	gnome-extensions pack --force --extra-source=dock.js --extra-source=animationManager.js --extra-source=folderManager.js --extra-source=intellihide.js --extra-source=trash.js --extra-source=tests/
+	gnome-extensions pack --force --extra-source=dock.js --extra-source=animationManager.js --extra-source=folderManager.js --extra-source=intellihide.js --extra-source=trash.js --extra-source=prefs.js --extra-source=tests/
 
 clean:
 	rm -f $(SCHEMAS_DIR)/gschemas.compiled
