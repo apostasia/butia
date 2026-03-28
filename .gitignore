@@ -1,31 +1,5 @@
-# ==========================================
 # Butiá - .gitignore
-# ==========================================
-
-# 1. Compilados do GNOME (GSettings)
-# O arquivo gschemas.compiled é um binário gerado localmente pelo comando glib-compile-schemas.
-# Ele NUNCA deve ser versionado, pois é dependente da arquitetura local e deve ser gerado a cada instalação.
-schemas/gschemas.compiled
-
-# 2. Artefatos de Empacotamento
-# Quando a extensão estiver pronta, usaremos o comando `gnome-extensions pack` para gerar o arquivo final.
-# Ignoramos os zips para não enviar versões antigas da extensão para o repositório fonte.
+node_modules/
 *.zip
-*.tar.gz
-*.tar.xz
-build/
-dist/
-
-# 3. Logs e Debug do Wayland/Antigravity
-# Ignora saídas de debug, relatórios de crash e artefatos de texto gerados por IA durante o Vibe Coding.
-*.log
-.agents/
-crash-reports/
-
-# 4. Arquivos Temporários de IDE e Sistema Operacional
-# Evita que configurações pessoais de editores de texto ou metadados de gerenciadores de arquivos poluam o código.
-.vscode/
-.idea/
-*.swp
-*~
-.directory
+schemas/gschemas.compiled
+*.tmp.js
