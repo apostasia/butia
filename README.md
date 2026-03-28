@@ -1,71 +1,67 @@
 # Butiá - Advanced GNOME Shell Dock
 
-**Butiá** (`butia@apostasia.github.com`) is a high-performance, Wayland-only dock  designed specifically for modern GNOME Shell environments (versions 49, 50, and above).
+**Butiá** (`butia@apostasia.github.com`) is a premium, high-performance, Wayland-only dock extension designed specifically for modern GNOME Shell environments (versions 49, 50, and above).
 
-Built entirely on ECMAScript Modules (ESM), it intercepts the GNOME compositor's paint cycle to inject hardware-accelerated visual transformations and organic physics. The result is a premium, lag-free user experience that seamlessly integrates with the Linux desktop.
+Built entirely on **ECMAScript Modules (ESM)** and developed using **Test-Driven Development (TDD)**, it replaces the original GNOME Dash with an advanced dock featuring macOS aesthetics and iOS functionality.
 
 ---
 
-## 🚀 Core Architecture & Technologies
+## 🚀 Core Architecture & Features
 
 The engine is built strictly for modern GNOME, discarding legacy paradigms to ensure absolute stability:
 
-* **Wayland-Native & Pure ESM:** Completely removes legacy X11 dependencies and nested session flags. The extension is built on modern GNOME Shell architectural standards, ensuring forward compatibility with the Mutter compositor.
-* **Singleton Engine Pattern:** Manages instances per monitor efficiently, intercepting events at the `global.stage` (level 0) to ensure continuous and precise mouse coordinate tracking, regardless of which window is in focus.
-* **Zero-Leak Lifecycle:** Implements aggressive and defensive memory management. 
-  * Every `Clutter.Clone` instantiated for rendering is tracked.
-  * Every D-Bus signal and global stage event is explicitly disconnected during the `disable()` phase.
-  * This prevents memory leaks and ensures the GNOME Shell remains stable across multiple enable/disable cycles.
-* **Frame Hook Rendering:** Utilizes `Meta.later_add` with a `BEFORE_REDRAW` priority. This guarantees that all positional and scale calculations occur milliseconds before the GPU draws the frame, effectively eliminating input lag and visual stuttering.
+* **Wayland-Native & Pure ESM:** Completely removes legacy X11 dependencies. The extension is built on modern GNOME Shell architectural standards, ensuring forward compatibility with the Mutter compositor.
+* **Glassmorphism UI:** Implements static Glassmorphism via `Shell.BlurEffect`. The background is a reactive translucent glass (Apple style) with 1px stroke borders and 24px rounded corners.
+* **Intellihide Behavior:** The dock automatically hides when overlapping with windows, utilizing the `Meta.WindowTracker` signals (`size-changed` and `position-changed`).
+* **Z-Axis Elevation & Animation:** Escales only the icon directly under the cursor (1.3x magnification) with a central pivot point (0.5, 0.5) and dynamic diffuse shadows.
+* **iOS-Style App Folders:** Full integration with GNOME's native app folders (`org.gnome.desktop.app-folders`). Clicking a folder expands it into a full-screen view with deep background blur and horizontal pagination (EASE_OUT_QUINT snap physics).
+* **Jiggle Mode:** Edit mode activated via an 800ms long press. Icons oscillate ($\pm 2^\circ$) with random delays for a natural, organic feel.
+* **Trash Integration:** Fixed trash icon on the right side with real-time monitoring via `Gio.FileMonitor` (`trash://`), supporting asynchronous empty operations.
+* **Customizable Preferences:** Native GTK4/Libadwaita configuration window (`prefs.js`) to choose Launch Animations (Zoom Launch or Glow Pulse) and Multi-Monitor behavior.
 
 ---
 
-## 🧮 Physics Engine & Motion Design
+## 🧪 Test-Driven Development (TDD)
 
-Butiá does not rely on simple CSS transitions. It uses a reactive rendering loop based on continuous mathematical functions to create organic inertia and dynamic magnification.
+Butiá is developed with a strict TDD methodology. We use a custom, headless GJS test runner that executes Jasmine-style specs (`describe`, `it`, `expect`, `spyOn`).
 
-### Gaussian Magnification
-We reject linear scaling in favor of a Normal Distribution function. The scale of each icon is calculated dynamically based on cursor proximity:
+### Running the Tests
 
-* **Base Size:** 64px (dynamically adjustable via auto-scaling algorithm).
-* **Maximum Scale:** 134.4px (2.1x magnification).
-* **Sigma (Standard Deviation):** Strictly set to 115px. This defines the width and smoothness of the magnification wave.
-* **Algorithm:** `Scale = Base + (Max - Base) * e^(-(Mouse_X - Icon_X)^2 / (2 * Sigma^2))`
+To run the unit tests without launching a full GNOME Shell instance, simply execute:
 
-### Organic Inertia (LERP)
-To ensure UI elements do not instantly teleport but instead float and settle naturally, we employ Linear Interpolation:
+```bash
+make test
+# or manually:
+./tests/run-unit-tests.sh
+```
 
-* **LERP Factor:** Strictly set to 0.20.
-* **Behavior:** This guarantees that an icon reaches its target scale in approximately 22 frames (on a 120Hz display), mimicking the physical weight and resistance of real objects.
+Our test suite uses custom lightweight mocks for `gi://Clutter`, `gi://St`, `gi://Shell`, `gi://Meta`, and `gi://Gio` to ensure logic is verified rapidly and independently of the compositor's rendering cycle.
 
 ---
 
-## 🎨 UI & Interaction Design
+## 🛠️ Development Setup & Building
 
-* **Glassmorphism Rendering:** Utilizes direct texture buffer manipulation. It creates a reactive glass floor via `Clutter.Clone` (180-degree X-axis rotation) and applies dual-filtering Gaussian blur shaders for deep, translucent background aesthetics.
-* **Responsive Auto-Scaling:** Automatically calculates the total width of the dock. If it exceeds 90% of the monitor's viewport, the engine actively recalculates the base icon size while maintaining a fixed 8px gap.
-* **Folder Merging Logic:** Features Bounding Box Intersection detection. Hovering an icon over a target zone for 500ms (Dwell Time) triggers a cubic Bézier animation, safely signaling folder creation without accidental clustering.
+To contribute or test the extension:
 
----
-
-## 🛠️ Development Setup (CachyOS / Arch Linux)
-
-To contribute or test the extension in an isolated, safe environment without risking your primary desktop session:
-
-1. **Install Core Dependencies:** Ensure you have the necessary introspection and compositor packages installed:
+1. **Install Core Dependencies:** Ensure you have the necessary introspection and compositor packages installed (example for Arch/CachyOS):
    ```bash
-   sudo pacman -S base-devel gnome-shell mutter gjs gobject-introspection python-gobject glib2 dbus
+   sudo pacman -S base-devel gnome-shell mutter gjs gobject-introspection glib2 dbus
    ```
 
-2. **Compile GSettings Schemas:** Before running the extension, you must compile the schemas to manage dynamic state:
+2. **Compile Schemas & Pack:**
    ```bash
-   glib-compile-schemas schemas/
+   make all     # Compiles the GSettings schemas
+   make pack    # Bundles the extension into a ZIP file using gnome-extensions CLI
    ```
 
-3. **Launch Hot Reload Environment:** Start the extension in a sandboxed Wayland virtual monitor using the provided development script:
+3. **Install Locally:**
    ```bash
-   ./run-butia-virtual.sh
-   # Or manually: env GNOME_SHELL_EXTENSION_PATH=$PWD dbus-run-session -- gnome-shell --wayland --devkit --virtual-monitor 1280x720
+   make install # Copies the extension to ~/.local/share/gnome-shell/extensions/
+   ```
+
+4. **Launch Smoke Test Environment:** Start the extension in a nested Wayland session:
+   ```bash
+   ./run-tests.sh
    ```
 
 ---
@@ -74,13 +70,17 @@ To contribute or test the extension in an isolated, safe environment without ris
 
 ```text
 /butia@apostasia.github.com
-├── metadata.json      # Extension identity and GNOME 49/50+ targets
-├── extension.js       # Core Engine, Physics Loop, and ESM Lifecycle
-├── folderManager.js   # Popover logic and folder clustering
-├── stylesheet.css     # Visual definitions, Blur parameters, and Shaders
-├── icon.png           # Official Butiá asset
-├── schemas/           # GSettings XML configurations
-└── run-butia-virtual.sh # Wayland sandbox testing script
+├── metadata.json       # Extension identity and GNOME 49/50+ targets
+├── extension.js        # Core Extension Lifecycle (enable/disable)
+├── dock.js             # St.BoxLayout and Glassmorphism rendering
+├── animationManager.js # Hover transitions, Launch FX, and Jiggle Mode
+├── intellihide.js      # Meta.WindowTracker overlap detection
+├── folderManager.js    # GSettings org.gnome.desktop.app-folders integration
+├── trash.js            # Gio.FileMonitor for trash:///
+├── prefs.js            # GTK4/Libadwaita preferences window
+├── stylesheet.css      # Visual definitions and animations
+├── schemas/            # GSettings XML configurations
+└── tests/              # TDD Specs and gi:// Mocks
 ```
 
 ---
@@ -88,5 +88,3 @@ To contribute or test the extension in an isolated, safe environment without ris
 ## 📄 License
 
 This program is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License** as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
