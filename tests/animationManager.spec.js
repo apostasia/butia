@@ -48,4 +48,24 @@ describe('Animation Manager', () => {
         animationManager.stopJiggleMode(dockItems);
         expect(dockItems[0]._style_class).toBe('butia-dock-item');
     });
+
+    it('should trigger Launch Animation (Zoom) based on settings', () => {
+        let actor = new StMock.Widget();
+        spyOn(actor, 'set_scale');
+        
+        // Mock the GSettings read
+        spyOn(animationManager._settings, 'get_string').and.returnValue('zoom');
+        
+        animationManager.playLaunchAnimation(actor);
+        expect(animationManager._settings.get_string).toHaveBeenCalledWith('launch-animation');
+        expect(actor.scale_x).toBe(1.5);
+    });
+
+    it('should trigger Launch Animation (Glow) based on settings', () => {
+        let actor = new StMock.Widget();
+        spyOn(animationManager._settings, 'get_string').and.returnValue('glow');
+        
+        animationManager.playLaunchAnimation(actor);
+        expect(actor._style_class).toBe('butia-dock-item butia-launch-glow');
+    });
 });

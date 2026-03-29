@@ -3,15 +3,14 @@ class Settings {
         this.schema_id = params.schema_id;
         this._store = {
             'folder-children': ['Utilities', 'Games'],
-            'favorite-apps': ['firefox.desktop', 'org.gnome.Terminal.desktop']
+            'favorite-apps': ['firefox.desktop', 'org.gnome.Terminal.desktop'],
+            'launch-animation': 'zoom'
         };
     }
-    get_strv(key) {
-        return this._store[key] || [];
-    }
-    set_strv(key, val) {
-        this._store[key] = val;
-    }
+    get_strv(key) { return this._store[key] || []; }
+    set_strv(key, val) { this._store[key] = val; }
+    get_string(key) { return this._store[key] || ''; }
+    set_string(key, val) { this._store[key] = val; }
     connect() {}
     disconnect() {}
 }

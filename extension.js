@@ -35,6 +35,7 @@ export default class Butia extends Extension {
 
         this._animationManager = new AnimationManager();
         this._dock = new Dock();
+        this._dock._animationManager = this._animationManager;
         this._trashManager = new TrashManager();
         
         // Popula os mockups (Phase 2)

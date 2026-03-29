@@ -26,6 +26,7 @@ export default class Dock {
         this.container.add_effect(blurEffect);
         
         this._folderManager = new FolderManager();
+        this._animationManager = null;
         this._appSystem = Shell.AppSystem.get_default();
         this._windowTracker = Meta.WindowTracker.get_default();
         this._settings = new Gio.Settings({ schema_id: 'org.gnome.shell' });
@@ -80,6 +81,7 @@ export default class Dock {
 
         button.connect('clicked', () => {
             app.activate();
+            this._animationManager.playLaunchAnimation(button);
             // Animation triggers would go here
         });
 

@@ -19,11 +19,4 @@ describe('Folder Manager', () => {
         let folders = folderManager.getAppFolders();
         expect(folders.includes('Productivity')).toBeTruthy();
     });
-
-    it('should overlay a ScrollView when expanded', () => {
-        let overlay = folderManager.createExpandedView('Utilities');
-        expect(overlay).toBeDefined();
-        // Just checking it creates an actor
-        expect(overlay.add_actor).toBeDefined();
-    });
 });

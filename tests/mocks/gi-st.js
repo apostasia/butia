@@ -8,6 +8,8 @@ export default {
             this.reactive = params.reactive;
             this.track_hover = params.track_hover;
             this._style_class = '';
+            this.x_expand = params.x_expand || false;
+            this.y_expand = params.y_expand || false;
         }
         set_style_class_name(name) { this._style_class = name; }
         get_preferred_width() { return [0, 100]; }
@@ -21,8 +23,11 @@ export default {
             this.width = params.width || 0;
             this.height = params.height || 0;
             this._style_class = '';
+            this.x_expand = params.x_expand || false;
+            this.y_expand = params.y_expand || false;
         }
         set_style_class_name(name) { this._style_class = name; }
+        add_effect(effect) { this._effect = effect; }
     },
     Button: class Button extends Clutter.Actor {
         constructor(params = {}) {
@@ -38,7 +43,11 @@ export default {
         emit(sig) { if (this._signals[sig]) this._signals[sig](); }
     },
     ScrollView: class ScrollView extends Clutter.Actor {
-        constructor() { super(); }
+        constructor(params = {}) {
+            super();
+            this.x_expand = params.x_expand || false;
+            this.y_expand = params.y_expand || false;
+        }
         add_actor(actor) { this.add_child(actor); }
     }
 };
