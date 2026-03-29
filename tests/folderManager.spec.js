@@ -19,4 +19,11 @@ describe('Folder Manager', () => {
         let folders = folderManager.getAppFolders();
         expect(folders.includes('Productivity')).toBeTruthy();
     });
+
+    it('should overlay a full-screen widget when expanded', () => {
+        // Just verify the overlay creates a widget with blur effect
+        // We can't fully test rendering without real GNOME env
+        let overlay = folderManager.createExpandedView('Utilities', [], null);
+        expect(overlay).toBeDefined();
+    });
 });

@@ -17,6 +17,7 @@ export default {
             this.y = 0;
             this.scale_x = 1.0;
             this.scale_y = 1.0;
+            this._signals = {};
         }
         add_child(child) { this._children.push(child); }
         get_children() { return this._children; }
@@ -31,6 +32,7 @@ export default {
         add_effect(effect) { this._effect = effect; }
         set_x_align(align) { this._x_align = align; }
         set_y_align(align) { this._y_align = align; }
+        connect(sig, cb) { this._signals[sig] = cb; return 1; }
     },
     PropertyTransition: class PropertyTransition {
         constructor(name) {
