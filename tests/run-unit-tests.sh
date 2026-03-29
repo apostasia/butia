@@ -153,11 +153,12 @@ globalThis.loadModuleForTest = async function(moduleName) {
     }
 
     // Since files rely on other files, we must create temp files for all of them first
-    if (moduleName === 'extension.js' || moduleName === 'dock.js') {
+    if (moduleName === 'extension.js' || moduleName === 'dock.js' || moduleName === 'notificationManager.js') {
         createTempTestFile(EXTENSION_DIR + '/folderManager.js');
         createTempTestFile(EXTENSION_DIR + '/dock.js');
         createTempTestFile(EXTENSION_DIR + '/animationManager.js');
         createTempTestFile(EXTENSION_DIR + '/trash.js');
+        createTempTestFile(EXTENSION_DIR + '/notificationManager.js');
     }
 
     let tempPath = createTempTestFile(sourcePath);

@@ -103,3 +103,19 @@
 .butia-trash-full {
     opacity: 1.0;
 }
+
+/* Notification Badges */
+.butia-app-badge {
+    position: absolute;
+    background-color: #e01b24;
+    color: white;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    text-align: center;
+    border: 2px solid rgba(30, 30, 30, 0.8);
+    z-index: 10;
+}

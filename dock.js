@@ -6,6 +6,7 @@ import Meta from 'gi://Meta';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
 import FolderManager from './folderManager.js';
+import NotificationManager from './notificationManager.js';
 
 export default class Dock {
     constructor() {
@@ -27,6 +28,7 @@ export default class Dock {
         this.container.add_effect(blurEffect);
         
         this._folderManager = new FolderManager();
+        this._notificationManager = new NotificationManager();
         this._animationManager = null;
         this._appSystem = Shell.AppSystem.get_default();
         this._windowTracker = Meta.WindowTracker.get_default();
@@ -64,20 +66,39 @@ export default class Dock {
         button.appId = app.get_id();
         button.app = app;
 
-        let box = new St.BoxLayout({ vertical: true, x_align: Clutter.ActorAlign.CENTER });
+        // Container for icon + dot + badge
+        let mainBox = new St.BoxLayout({ vertical: true, x_align: Clutter.ActorAlign.CENTER });
+        
+        // Icon container (to position badge absolutely)
+        let iconBox = new St.BoxLayout({ vertical: false });
         
         let texture = app.create_icon_texture(64);
-        box.add_child(texture);
+        iconBox.add_child(texture);
         
+        // Badge
+        let badge = new St.Widget({
+            style_class: 'butia-app-badge',
+            width: 18, height: 18,
+            visible: false
+        });
+        this._updateBadge(app.get_id(), badge);
+        
+        // Position badge in top-right corner
+        badge.set_position(48, -4);
+        iconBox.add_child(badge);
+        
+        mainBox.add_child(iconBox);
+        
+        // Indicator dot
         let dot = new St.Widget({
             style_class: 'butia-app-indicator',
             width: 4, height: 4
         });
         
         this._updateIndicator(app, dot);
-        box.add_child(dot);
+        mainBox.add_child(dot);
         
-        button.set_child(box);
+        button.set_child(mainBox);
 
         // Long press for Jiggle Mode
         let longPressTimer = null;
@@ -94,7 +115,6 @@ export default class Dock {
         });
         
         button.connect('clicked', () => {
-            // Stop jiggle if clicking
             this._stopJiggleMode();
             
             if (longPressTimer) {
@@ -128,6 +148,16 @@ export default class Dock {
         DND.makeDraggable(button, { restoreOnSuccess: true });
         
         return button;
+    }
+
+    _updateBadge(appId, badgeWidget) {
+        let count = this._notificationManager.getBadgeCount(appId);
+        if (count > 0) {
+            badgeWidget.visible = true;
+            badgeWidget.label = count > 99 ? '99+' : count.toString();
+        } else {
+            badgeWidget.visible = false;
+        }
     }
 
     _isFolder(appId) {
