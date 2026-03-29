@@ -10,11 +10,13 @@ describe('Butia Extension Class', () => {
     });
 
     it('should hide the default GNOME dash when enabled', () => {
-        // Reset state
         MainMock.overview.dash._visible = true;
         
         extension.enable();
-        // Since it calls _initializeUI
+        
+        // With the new architecture, we need to manually call init since we mock monitors
+        extension._initializeUI();
+        
         expect(MainMock.overview.dash._visible).toBeFalsy();
     });
 

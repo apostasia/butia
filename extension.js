@@ -4,13 +4,15 @@ import Gio from 'gi://Gio';
 import Dock from './dock.js';
 import AnimationManager from './animationManager.js';
 import TrashManager from './trash.js';
+import IntellihideManager from './intellihide.js';
 
 export default class Butia extends Extension {
     constructor(metadata) {
         super(metadata);
-        this._docks = []; // Support multiple docks (multi-monitor)
+        this._docks = [];
         this._animationManager = null;
         this._trashManager = null;
+        this._intellihideManager = null;
         this._startupId = 0;
         this._settings = new Gio.Settings({ schema_id: 'org.gnome.shell.extensions.butia' });
     }
@@ -41,7 +43,6 @@ export default class Butia extends Extension {
         let multiMonitorMode = this._settings.get_string('multi-monitor');
         let monitors = Main.layoutManager.monitors;
         
-        // If primary only, use only primaryMonitor
         let targetMonitors = (multiMonitorMode === 'all') 
             ? monitors 
             : [Main.layoutManager.primaryMonitor];
@@ -51,18 +52,15 @@ export default class Butia extends Extension {
             dock._animationManager = this._animationManager;
             dock.populate();
             
-            // Add trash to first dock only (or all, depending on preference)
             if (index === 0) {
                 dock.container.add_child(this._trashManager.getActor());
             }
 
-            // Apply hover animations
             let children = dock.container.get_children();
             for(let i=0; i<children.length; i++) {
                 this._animationManager.setupHoverAnimation(children[i]);
             }
 
-            // Position dock
             Main.layoutManager.addChrome(dock.container);
             
             let natWidth = dock.container.get_preferred_width(-1)[1];
@@ -75,6 +73,11 @@ export default class Butia extends Extension {
 
             this._docks.push(dock);
         });
+
+        // Initialize Intellihide for the first dock
+        if (this._docks.length > 0) {
+            this._intellihideManager = new IntellihideManager(this._docks[0]);
+        }
     }
 
     disable() {
@@ -90,7 +93,11 @@ export default class Butia extends Extension {
             this._trashManager = null;
         }
 
-        // Remove all docks
+        if (this._intellihideManager) {
+            this._intellihideManager.destroy();
+            this._intellihideManager = null;
+        }
+
         this._docks.forEach(dock => {
             Main.layoutManager.removeChrome(dock.container);
             dock.container.destroy();
