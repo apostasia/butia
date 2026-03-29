@@ -3,6 +3,7 @@ import St from 'gi://St';
 import Shell from 'gi://Shell';
 import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
 import FolderManager from './folderManager.js';
 
@@ -30,6 +31,9 @@ export default class Dock {
         this._appSystem = Shell.AppSystem.get_default();
         this._windowTracker = Meta.WindowTracker.get_default();
         this._settings = new Gio.Settings({ schema_id: 'org.gnome.shell' });
+        this._appFolders = this._folderManager.getAppFolders();
+        this._overlayActive = false;
+        this._jiggleTimeout = null;
     }
 
     populate() {
@@ -60,32 +64,54 @@ export default class Dock {
         button.appId = app.get_id();
         button.app = app;
 
-        // Visual layout for icon + dot
         let box = new St.BoxLayout({ vertical: true, x_align: Clutter.ActorAlign.CENTER });
         
-        // Use app's texture
         let texture = app.create_icon_texture(64);
         box.add_child(texture);
         
-        // Indicator dot
         let dot = new St.Widget({
             style_class: 'butia-app-indicator',
             width: 4, height: 4
         });
         
-        // Initial state logic
         this._updateIndicator(app, dot);
         box.add_child(dot);
         
         button.set_child(box);
 
+        // Long press for Jiggle Mode
+        let longPressTimer = null;
+        button.connect('button-press-event', () => {
+            longPressTimer = setTimeout(() => {
+                this._startJiggleMode();
+            }, 800);
+        });
+        button.connect('button-release-event', () => {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        });
+        
         button.connect('clicked', () => {
-            app.activate();
-            this._animationManager.playLaunchAnimation(button);
-            // Animation triggers would go here
+            // Stop jiggle if clicking
+            this._stopJiggleMode();
+            
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+
+            if (this._isFolder(app.get_id())) {
+                this._openFolderOverlay(app.get_id());
+            } else {
+                app.activate();
+                if (this._animationManager) {
+                    this._animationManager.playLaunchAnimation(button);
+                }
+            }
         });
 
-        // DND Implementation
         button.handleDragOver = (source, actor, x, y, time) => {
             if (source === button) return DND.DragMotionResult.NO_DROP;
             return DND.DragMotionResult.MOVE_DROP;
@@ -95,12 +121,67 @@ export default class Dock {
             if (source === button) return false;
             let folderName = `Folder_${source.appId}_${button.appId}`;
             this._folderManager.createFolder(folderName, [source.appId, button.appId]);
+            this._appFolders = this._folderManager.getAppFolders();
             return true;
         };
 
         DND.makeDraggable(button, { restoreOnSuccess: true });
         
         return button;
+    }
+
+    _isFolder(appId) {
+        return this._appFolders.some(f => f.includes(appId) || appId.includes(f));
+    }
+
+    _openFolderOverlay(folderName) {
+        if (this._overlayActive) return;
+        this._overlayActive = true;
+
+        let folderApps = ['firefox.desktop', 'terminal.desktop'];
+        let overlay = this._folderManager.createExpandedView(folderName, folderApps, this._appSystem);
+
+        Main.layoutManager.addChrome(overlay);
+        overlay.set_position(0, 0);
+        
+        this._currentOverlay = overlay;
+        
+        overlay.connect('button-release-event', () => {
+            this._closeFolderOverlay();
+            return Clutter.EVENT_STOP;
+        });
+    }
+
+    _closeFolderOverlay() {
+        if (this._currentOverlay) {
+            Main.layoutManager.removeChrome(this._currentOverlay);
+            this._currentOverlay.destroy();
+            this._currentOverlay = null;
+            this._overlayActive = false;
+        }
+    }
+
+    _startJiggleMode() {
+        let children = this.container.get_children();
+        let dockItems = children.filter(c => c.appId);
+        if (this._animationManager) {
+            this._animationManager.setupJiggleMode(dockItems);
+            this._jiggleTimeout = setTimeout(() => {
+                this._stopJiggleMode();
+            }, 5000);
+        }
+    }
+
+    _stopJiggleMode() {
+        if (this._jiggleTimeout) {
+            clearTimeout(this._jiggleTimeout);
+            this._jiggleTimeout = null;
+        }
+        let children = this.container.get_children();
+        let dockItems = children.filter(c => c.appId);
+        if (this._animationManager) {
+            this._animationManager.stopJiggleMode(dockItems);
+        }
     }
 
     _updateIndicator(app, dotWidget) {
